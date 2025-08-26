@@ -13,14 +13,12 @@ REGISTRY_KEY = r"*\shell\AutostartManager"
 REGISTRY_VERSION_KEY = r"Software\AutostartManager"
 
 def is_admin():
-    """Проверяет, запущен ли скрипт от имени администратора"""
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
 
 def get_installed_version():
-    """Получает установленную версию из реестра"""
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, REGISTRY_VERSION_KEY) as key:
             version, _ = winreg.QueryValueEx(key, "Version")
@@ -29,7 +27,6 @@ def get_installed_version():
         return None
 
 def set_installed_version(version):
-    """Устанавливает версию в реестре"""
     try:
         with winreg.CreateKey(winreg.HKEY_CURRENT_USER, REGISTRY_VERSION_KEY) as key:
             winreg.SetValueEx(key, "Version", 0, winreg.REG_SZ, version)
@@ -38,7 +35,6 @@ def set_installed_version(version):
         return False
 
 def create_shortcut(target_path, shortcut_path):
-    """Создает ярлык"""
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut(shortcut_path)
     shortcut.Targetpath = target_path
@@ -46,9 +42,7 @@ def create_shortcut(target_path, shortcut_path):
     shortcut.save()
 
 def remove_context_menu():
-    """Удаляет пункт из контекстного меню"""
     try:
-        # Удаляем основную ветку
         try:
             winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, REGISTRY_KEY + r"\command")
         except:
@@ -59,7 +53,6 @@ def remove_context_menu():
         except:
             pass
         
-        # Удаляем информацию о версии
         try:
             winreg.DeleteKey(winreg.HKEY_CURRENT_USER, REGISTRY_VERSION_KEY)
         except:
@@ -72,7 +65,6 @@ def remove_context_menu():
         return False
 
 def add_to_context_menu():
-    """Добавляет пункт в контекстное меню с функцией добавления/удаления из автозагрузки"""
     try:
         python_code = '''
 import os, sys, tempfile, shutil, base64
@@ -141,20 +133,16 @@ if __name__ == "__main__":
             else:
                 print("Отменено")
         else:
-            # Просто добавляем без сообщения
             add_to_autostart(file_path)
 '''
 
-        # Кодируем код в base64
         encoded_code = base64.b64encode(python_code.encode('utf-8')).decode('utf-8')
         
-        # Команда которая декодирует и выполняет Python код
         command = (
             f'"{sys.executable}" -c '
             f'"import base64; exec(base64.b64decode(\\"{encoded_code}\\"))" "%1"'
         )
 
-        # Создаем ключи в реестре
         with winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, REGISTRY_KEY) as key:
             winreg.SetValue(key, None, winreg.REG_SZ, "Управление автозагрузкой")
             winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, "shell32.dll,25")
@@ -162,7 +150,6 @@ if __name__ == "__main__":
         with winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, REGISTRY_KEY + r"\command") as key:
             winreg.SetValue(key, None, winreg.REG_SZ, command)
         
-        # Сохраняем информацию о версии
         set_installed_version(VERSION)
         
         print("✓ Пункт меню добавлен в контекстное меню")
@@ -173,7 +160,6 @@ if __name__ == "__main__":
         return False
 
 def restart_explorer():
-    """Перезапускает проводник Windows"""
     try:
         os.system('taskkill /f /im explorer.exe')
         os.system('start explorer.exe')
@@ -182,7 +168,6 @@ def restart_explorer():
         print("⚠ Не удалось перезапустить проводник")
 
 def check_and_upgrade():
-    """Проверяет и обновляет предыдущие версии"""
     installed_version = get_installed_version()
     
     if not installed_version:
@@ -195,7 +180,6 @@ def check_and_upgrade():
     
     print(f"⚡ Обновление с версии {installed_version} до {VERSION}")
     
-    # Удаляем старую версию и устанавливаем новую
     remove_context_menu()
     return True
 
@@ -207,7 +191,6 @@ def main():
         input("Нажмите Enter для выхода...")
         return
     
-    # Проверяем текущую установку
     installed_version = get_installed_version()
     
     if installed_version == VERSION:
@@ -224,7 +207,6 @@ def main():
         input("Нажмите Enter для выхода...")
         return
     
-    # Обновляем или устанавливаем
     needs_install = check_and_upgrade()
     
     if needs_install:
@@ -241,7 +223,7 @@ def main():
     else:
         print("\n✓ Система уже обновлена до актуальной версии")
     
-    input("Нажмиte Enter для выхода...")
+    input("Нажмите Enter для выхода...")
 
 if __name__ == "__main__":
     main()
