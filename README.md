@@ -1,3 +1,5 @@
+![Автозапуск програм](https://imag.malavida.com/qa/qa-windows-11-2069.jpg)
+
 # Autostart Manager Context Menu
 
 Утилита для добавления пункта в контекстное меню Windows, позволяющего легко управлять автозагрузкой приложений.
